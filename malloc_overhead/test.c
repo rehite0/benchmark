@@ -1,6 +1,7 @@
 #include <alloca.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <alloca.h>
 #include <assert.h>
 #include <sys/types.h>
@@ -8,6 +9,7 @@
 #include "test_data.h"
 
 void test(ulong size);
+void test2(ulong size);
 void control(ulong size);
 void alloca_limit();
 int main(){
@@ -29,7 +31,28 @@ void test(ulong size){
 	}
 	printf("num allocated:%d\nsize:%lu\n",num_alloc,size);
 }
+void test2(ulong size){
+	//mem pool
+	char* mempool=NULL;
+	ulong top=0;
+	if (mempool==NULL) mempool=(char*)malloc(size*num_alloc);
+	void* arr[num_alloc];
+	for(int i=0;i<num_alloc;++i){
+		arr[i]=(void*)&mempool[top];
+		((int*)arr)[i]=1;
+		top+=size;
+	}
+	for(int i=0;i<num_alloc;++i){
+		top-=size;
+	}
+	(void)arr;
+	assert(top==0);
+	free(mempool);
+	printf("num allocated:%d\nsize:%lu\n",num_alloc,size);
+}
+
 void control(ulong size){
+	//vla or allca (basically stack allocation)
 	struct rlimit lim;
 	assert(0==getrlimit(RLIMIT_STACK,&lim));
 	assert(size*num_alloc-5000<lim.rlim_cur&&"too big for stack allocation");
