@@ -1,3 +1,5 @@
 *.out
+*.s
+*.o
 *.old
 *.data
